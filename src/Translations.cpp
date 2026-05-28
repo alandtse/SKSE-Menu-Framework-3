@@ -19,7 +19,7 @@ void Translations::Install() {
         logger::trace("translation json: {} must be an object", translationsFolder);
     }
     for (auto& [key, value] : j.items()) {
-        logger::trace("{} -> {}", key, value);
+        logger::trace("{} -> {}", key, value.dump());
         std::string v = value;
         translations[key] = strdup(v.c_str());
     }
