@@ -21,6 +21,59 @@ static ImGuiTreeNodeFlags base_flags =
     ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 static int selection_mask = (1 << 2);
 
+namespace {
+    struct WindowSizeAndPosition {
+        bool HasSavedState = false;
+        ImVec2 Position{};
+        ImVec2 Size{};
+    };
+
+    WindowSizeAndPosition mainWindowSizeAndPosition;
+    WindowSizeAndPosition configWindowSizeAndPosition;
+
+    void ApplyWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition, const ImVec2& defaultPosition, const ImVec2& defaultSize,
+                             const ImVec2& defaultPivot = ImVec2{0.0f, 0.0f}) {
+        if (sizeAndPosition.HasSavedState) {
+            ImGui::SetNextWindowPos(sizeAndPosition.Position, ImGuiCond_Appearing);
+            ImGui::SetNextWindowSize(sizeAndPosition.Size, ImGuiCond_Appearing);
+        } else {
+            ImGui::SetNextWindowPos(defaultPosition, ImGuiCond_Appearing, defaultPivot);
+            ImGui::SetNextWindowSize(defaultSize, ImGuiCond_Appearing);
+        }
+    }
+
+    void SaveWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition) {
+        sizeAndPosition.Position = ImGui::GetWindowPos();
+        sizeAndPosition.Size = ImGui::GetWindowSize();
+        sizeAndPosition.HasSavedState = true;
+    }
+
+    ImVec2 GetCenteredWindowPosition(const ImGuiViewport* viewport, const ImVec2& size) {
+        const auto center = viewport->GetCenter();
+        return ImVec2{center.x - size.x * 0.5f, center.y - size.y * 0.5f};
+    }
+
+    void SetWindowSizeAndPosition(WindowSizeAndPosition& sizeAndPosition, const ImVec2& position, const ImVec2& size) {
+        sizeAndPosition.Position = position;
+        sizeAndPosition.Size = size;
+        sizeAndPosition.HasSavedState = true;
+    }
+
+    void ResetBuiltInWindowSizeAndPosition(const ImGuiViewport* viewport) {
+        const ImVec2 mainWindowSize{viewport->Size.x * 0.8f, viewport->Size.y * 0.8f};
+        const ImVec2 mainWindowPosition = GetCenteredWindowPosition(viewport, mainWindowSize);
+        SetWindowSizeAndPosition(mainWindowSizeAndPosition, mainWindowPosition, mainWindowSize);
+        ImGui::SetWindowPos("#MCPMainWindow", mainWindowPosition, ImGuiCond_Always);
+        ImGui::SetWindowSize("#MCPMainWindow", mainWindowSize, ImGuiCond_Always);
+
+        const ImVec2 configWindowSize{viewport->Size.x * 0.4f, viewport->Size.y * 0.4f};
+        const ImVec2 configWindowPosition = GetCenteredWindowPosition(viewport, configWindowSize);
+        SetWindowSizeAndPosition(configWindowSizeAndPosition, configWindowPosition, configWindowSize);
+        ImGui::SetWindowPos("Settings##Window", configWindowPosition, ImGuiCond_Always);
+        ImGui::SetWindowSize("Settings##Window", configWindowSize, ImGuiCond_Always);
+    }
+}
+
 void DummyRenderer(std::pair<const std::string, UI::MenuTree*>& node) {
     ++node_id;
     for (auto& item : node.second->Children) {
@@ -65,18 +118,23 @@ void RenderNode(std::pair<const std::string, UI::MenuTree*>& node) {
 
 void __stdcall UI::RenderMenuWindow() {
     auto viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2{0.5f, 0.5f});
-    ImGui::SetNextWindowSize(ImVec2{viewport->Size.x * 0.8f, viewport->Size.y * 0.8f}, ImGuiCond_Appearing);
+    ApplyWindowSizeAndPosition(mainWindowSizeAndPosition, viewport->GetCenter(), ImVec2{viewport->Size.x * 0.8f, viewport->Size.y * 0.8f},
+                        ImVec2{0.5f, 0.5f});
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_MenuBar;
     window_flags |= ImGuiWindowFlags_NoTitleBar;
 
     ImGui::Begin("#MCPMainWindow", nullptr, window_flags);
+    SaveWindowSizeAndPosition(mainWindowSizeAndPosition);
 
     if (ImGui::BeginMenuBar()) {
         PushSolid();
         if (ImGui::BeginMenu(Translations::Get("Options"))) {
+            if (ImGui::MenuItem(Translations::Get("Settings.ResetWindows"))) {
+                ResetBuiltInWindowSizeAndPosition(viewport);
+            }
+
             if (ImGui::MenuItem(Translations::Get("Options.ResumeGame"))) {
                 WindowManager::MainInterface->BlockUserInput = false;
                 WindowManager::ConfigInterface->BlockUserInput = false;
@@ -231,15 +289,16 @@ bool ToggleButton(const char* label, bool* v) {
 
 void UI::RenderConfigWindow() {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2{0.5f, 0.5f});
-    ImGui::SetNextWindowSize(ImVec2{viewport->Size.x * 0.4f, viewport->Size.y * 0.4f}, ImGuiCond_Appearing);
+    ApplyWindowSizeAndPosition(configWindowSizeAndPosition, viewport->GetCenter(), ImVec2{viewport->Size.x * 0.4f, viewport->Size.y * 0.4f},
+                        ImVec2{0.5f, 0.5f});
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_MenuBar;
     window_flags |= ImGuiWindowFlags_NoTitleBar;
 
-    if (ImGui::Begin("Settings##Window", nullptr,
-                     window_flags)) {
+    bool shouldRenderContent = ImGui::Begin("Settings##Window", nullptr, window_flags);
+    SaveWindowSizeAndPosition(configWindowSizeAndPosition);
+    if (shouldRenderContent) {
         if (ImGui::BeginMenuBar()) {
             ImGui::Text(Translations::Get("Settings.Title"));
             float barWidth = ImGui::GetWindowWidth();
