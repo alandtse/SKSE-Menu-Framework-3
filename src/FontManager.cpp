@@ -5,6 +5,15 @@
 #define ICON_MIN_FA 0xe005
 #define ICON_MAX_FA 0xf8ff
 
+namespace {
+    constexpr ImWchar TURKISH_GLYPH_RANGES[] = {
+        0x011E, 0x011F, // G with breve
+        0x0130, 0x0131, // Dotted and dotless I
+        0x015E, 0x015F, // S with cedilla
+        0,
+    };
+}
+
 FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
     auto result = FontContainer();
 
@@ -22,6 +31,7 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
         if (Config::EnableKorean) builder.AddRanges(io.Fonts->GetGlyphRangesKorean());
         if (Config::EnableCyrillic) builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
         if (Config::EnableThai) builder.AddRanges(io.Fonts->GetGlyphRangesThai());
+        if (Config::EnableTurkish) builder.AddRanges(TURKISH_GLYPH_RANGES);
 
         builder.BuildRanges(&persistentGlyphRanges[size]);
 

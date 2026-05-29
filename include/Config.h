@@ -19,6 +19,7 @@ class Config {
     static bool EnableKorean;
     static bool EnableCyrillic;
     static bool EnableThai;
+    static bool EnableTurkish;
     static float FontSizeSmall;
     static float FontSizeMedium;
     static float FontSizeBig;
