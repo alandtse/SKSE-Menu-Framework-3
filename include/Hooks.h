@@ -3,6 +3,10 @@ namespace Hooks {
 
     void Install();
 
+    // Connect to the ImGuiVRHelper overlay (VR only). Call at kPostPostLoad so
+    // the helper's messaging listener is registered regardless of load order.
+    void ConnectVRHelper();
+
     struct WndProcHook {
         static LRESULT thunk(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static inline WNDPROC func;

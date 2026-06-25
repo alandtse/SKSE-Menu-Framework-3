@@ -25,9 +25,6 @@ include(cmake/lib/autoCollectSources.cmake)
 add_src_folder(src)
 add_include_folder(include)
 
-add_src_folder(vendor/src)
-add_include_folder(vendor/include)
-
 
 cmake_minimum_required(VERSION 3.21)
 set(AUTHOR_NAME "SkyrimThiago")
@@ -103,9 +100,28 @@ add_commonlibsse_plugin(
   AUTHOR AUTHOR_NAME
   SOURCES ${headers} ${sources}
 )
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) 
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 target_precompile_headers(${PROJECT_NAME} PRIVATE include/PCH.h)
 target_compile_definitions(${PROJECT_NAME}  PRIVATE BEAUTIFUL_NAME="${BEAUTIFUL_NAME}" IMGUI_DEFINE_MATH_OPERATORS)
+
+# ---------------------------------------------------- #
+#                ImGuiVRHelper client API              #
+# ---------------------------------------------------- #
+# Pulled from upstream instead of vendored, so the dependency and its pinned
+# version are explicit. The helper builds with xmake; we configure only its api/
+# CMake target (SOURCE_SUBDIR) and skip the helper's own submodules. The INTERFACE
+# target compiles the handshake stub into this plugin, inheriting our CommonLib /
+# ImGui / DX11 / json. Override with -DFETCHCONTENT_SOURCE_DIR_IMGUIVRHELPER=<path>
+# to build against a local checkout.
+FetchContent_Declare(
+    ImGuiVRHelper
+    GIT_REPOSITORY https://github.com/alandtse/imgui-vr-helper.git
+    GIT_TAG        v1.0.0
+    GIT_SUBMODULES ""
+    SOURCE_SUBDIR  api
+)
+FetchContent_MakeAvailable(ImGuiVRHelper)
+target_link_libraries(${PROJECT_NAME} PRIVATE ImGuiVRHelper::api)
 
 
 set(header_dirs "")

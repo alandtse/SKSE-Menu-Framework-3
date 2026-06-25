@@ -10,10 +10,32 @@
 #include "TextureLoader.h"
 #include "Event.h"
 
+#include "ImGuiVRHelperClientSDK.h"  // vendored ImGuiVRHelper SDK (VR overlay/input)
+
+namespace {
+    // VR overlay-helper client. In SkyrimVR with the helper installed, the menu
+    // is mirrored into the helper's in-scene panel and driven by the wand; on
+    // desktop (no helper) this stays unconnected and the normal flat path runs.
+    ImGuiVRHelperPluginAPI::Client g_vrHelper;
+}
+
 void Hooks::Install() {
     D3DInitHook::install();
     RenderUIHook::install();
     ProcessInputQueueHook::install();
+}
+
+void Hooks::ConnectVRHelper() {
+    // Call from our kPostPostLoad handler: by then the helper has registered its
+    // handshake listener (at kPostLoad), so the connect reaches it regardless of
+    // load order. On flat screen / SE-AE there's no helper, so Connect simply
+    // fails and the normal flat path runs.
+    if (g_vrHelper.Connect("SKSE Menu Framework", "3.0.0",
+            ImGuiVRHelperPluginAPI::kClientFlag_RendersOnFocus)) {
+        logger::info("ImGuiVRHelper: connected as VR overlay client");
+    } else {
+        logger::info("ImGuiVRHelper not present; menu stays on the flat mirror");
+    }
 }
 
 void Hooks::D3DInitHook::install() {
@@ -26,9 +48,9 @@ void Hooks::D3DInitHook::install() {
 void Hooks::RenderUIHook::install() {
     SKSE::AllocTrampoline(14);
     auto& trampoline = SKSE::GetTrampoline();
-    originalFunction1 = trampoline.write_call<5>(REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371), thunk1);
+    originalFunction1 = trampoline.write_call<5>(REL::RelocationID(35556, 36555, 35556).address() + REL::Relocate(0x3ab, 0x371, 0x355), thunk1);
     SKSE::AllocTrampoline(14);
-    originalFunction2 = trampoline.write_call<5>(REL::RelocationID(38085, 39039).address() + REL::Relocate(0x19a, 0x19a), thunk2);
+    originalFunction2 = trampoline.write_call<5>(REL::RelocationID(38085, 39039).address() + REL::Relocate(0x19a, 0x19a, 0x3FC), thunk2);
 }
 
 void Hooks::ProcessInputQueueHook::install() {
@@ -189,6 +211,16 @@ void Render() {
 
     Event::DispatchEvent(Event::EventType::kBeforeRender);
 
+    // VR overlay helper. When connected, Update() reconciles our menu-open state
+    // with the helper's focus (so its open/cycle combo opens this menu) and pumps
+    // the wand into ImGui before NewFrame consumes the input.
+    if (g_vrHelper.IsConnected()) {
+        bool menuOpen = WindowManager::IsAnyWindowOpen();
+        g_vrHelper.Update(menuOpen);
+        if (menuOpen != WindowManager::IsAnyWindowOpen())
+            menuOpen ? WindowManager::Open() : WindowManager::Close();
+    }
+
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     {
@@ -219,7 +251,11 @@ void Render() {
     }
     ImGui::EndFrame();
     ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    // One output call: VR + helper → flat panel only (the helper composites it
+    // as a world-space quad); flat screen / no helper → our normal in-game draw.
+    // RenderFrame hides that branch, so we never paint a second copy into the
+    // game's kHUDMENU (which Skyrim VR would wrap onto its curved HUD).
+    g_vrHelper.RenderFrame();
     FontManager::CleanFont();
 
     Event::DispatchEvent(Event::EventType::kAfterRender);
