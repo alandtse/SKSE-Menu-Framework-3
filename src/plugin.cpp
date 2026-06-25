@@ -15,6 +15,14 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     #endif
     logger::info("Plugin loaded");
     SKSE::Init(skse);
+    // Connect to ImGuiVRHelper at kPostPostLoad — by then the helper has
+    // registered its handshake listener (at kPostLoad), so this reaches it
+    // regardless of load order.
+    SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* m) {
+        if (m->type == SKSE::MessagingInterface::kPostPostLoad) {
+            Hooks::ConnectVRHelper();
+        }
+    });
     Config::Init();
     WindowManager::MainInterface = AddWindow(UI::RenderMenuWindow);
     WindowManager::ConfigInterface = AddWindow(UI::RenderConfigWindow);
