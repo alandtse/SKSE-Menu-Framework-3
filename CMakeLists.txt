@@ -1,9 +1,16 @@
 # ---------------------------------------------------- #
-#                 Required envs assert                 #
+#                  CommonLibSSE-NG source              #
 # ---------------------------------------------------- #
-
-if(NOT DEFINED ENV{COMMONLIB_SSE_FOLDER})
-  message(FATAL_ERROR "Missing COMMONLIB_SSE_FOLDER environment variable")
+# Prefer the COMMONLIB_SSE_FOLDER env var (a shared local clone) when set; else
+# fall back to the vendored submodule so the build is self-contained (CI, fresh
+# contributors) with a pinned, static dependency.
+if(DEFINED ENV{COMMONLIB_SSE_FOLDER})
+  set(COMMONLIBSSE_DIR "$ENV{COMMONLIB_SSE_FOLDER}")
+else()
+  set(COMMONLIBSSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/CommonLibSSE-NG")
+endif()
+if(NOT EXISTS "${COMMONLIBSSE_DIR}/CMakeLists.txt")
+  message(FATAL_ERROR "CommonLibSSE-NG not found at '${COMMONLIBSSE_DIR}'. Set COMMONLIB_SSE_FOLDER or run: git submodule update --init --recursive")
 endif()
 
 # ---------------------------------------------------- #
@@ -65,7 +72,7 @@ set(ENABLE_SKYRIM_VR ON CACHE BOOL " " FORCE)
 set(BUILD_TESTS OFF CACHE BOOL " " FORCE)
 set(VALIDATE_LICENSE OFF CACHE BOOL " " FORCE)
 
-add_subdirectory("$ENV{COMMONLIB_SSE_FOLDER}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
+add_subdirectory("${COMMONLIBSSE_DIR}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
 get_target_property(COMMONLIB_SRC_DIR CommonLibSSE SOURCE_DIR)
 
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")

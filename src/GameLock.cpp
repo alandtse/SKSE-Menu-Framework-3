@@ -1,5 +1,4 @@
 #include "GameLock.h"
-#include "Main.h"
 #include "Config.h"
 #include "imgui.h"
 #include "WindowManager.h"
@@ -14,18 +13,17 @@ void GameLock::SetState(State currentState) {
     }
     lastState = currentState;
     if (Config::FreezeTimeOnMenu) {
-        const auto main = reinterpret_cast<CustomRE::Main*>(RE::Main::GetSingleton());
+        const auto main = RE::Main::GetSingleton();
         if (currentState == State::Locked) {
-            main->freezeTime = true;
+            main->GetRuntimeData().freezeTime = true;
             didFreezeTime = true;
         } else {
             didFreezeTime = false;
-            main->freezeTime = false;
+            main->GetRuntimeData().freezeTime = false;
         }
     } else if (didFreezeTime) {
         didFreezeTime = false;
-        const auto main = reinterpret_cast<CustomRE::Main*>(RE::Main::GetSingleton());
-        main->freezeTime = false;
+        RE::Main::GetSingleton()->GetRuntimeData().freezeTime = false;
     }
 
     if (Config::BlurBackgroundOnMenu) {
