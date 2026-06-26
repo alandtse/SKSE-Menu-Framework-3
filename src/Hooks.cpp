@@ -1,4 +1,5 @@
 #include "Hooks.h"
+#include <format>
 #include "Renderer.h"
 #include "FontManager.h"
 #include "imgui_impl_dx11.h"
@@ -30,7 +31,10 @@ void Hooks::ConnectVRHelper() {
     // handshake listener (at kPostLoad), so the connect reaches it regardless of
     // load order. On flat screen / SE-AE there's no helper, so Connect simply
     // fails and the normal flat path runs.
-    if (g_vrHelper.Connect("SKSE Menu Framework", "3.0.0",
+    const auto decl = SKSE::PluginDeclaration::GetSingleton();
+    const auto version = decl->GetVersion();
+    const auto versionStr = std::format("{}.{}.{}", version.major(), version.minor(), version.patch());
+    if (g_vrHelper.Connect(BEAUTIFUL_NAME, versionStr.c_str(),
             ImGuiVRHelperPluginAPI::kClientFlag_RendersOnFocus)) {
         logger::info("ImGuiVRHelper: connected as VR overlay client");
     } else {
