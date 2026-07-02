@@ -211,16 +211,6 @@ void Render() {
         return;
     }
 
-    // Decided once per frame, not per RE::InputEvent: the VR wand is pumped
-    // straight into ImGui's IO below, bypassing RE::InputEvent entirely, so a
-    // wand-only session needs this cleared without a native keyboard/mouse
-    // event ever firing.
-    if (WindowManager::ShouldTheGameBePaused()) {
-        EnableImGuiInput();
-    } else {
-        DisableImGuiInput();
-    }
-
     Event::DispatchEvent(Event::EventType::kBeforeRender);
 
     // VR overlay helper. When connected, Update() reconciles our menu-open state
@@ -232,6 +222,17 @@ void Render() {
         if (menuOpen != WindowManager::IsAnyWindowOpen())
             menuOpen ? WindowManager::Open() : WindowManager::Close();
         g_vrHelper.PumpKeyboard();
+    }
+
+    // Decided once per frame, after the VR reconciliation above (which can
+    // flip menu-open this same frame), not per RE::InputEvent: the VR wand is
+    // pumped straight into ImGui's IO above, bypassing RE::InputEvent
+    // entirely, so a wand-only session needs this cleared without a native
+    // keyboard/mouse event ever firing.
+    if (WindowManager::ShouldTheGameBePaused()) {
+        EnableImGuiInput();
+    } else {
+        DisableImGuiInput();
     }
 
     ImGui_ImplDX11_NewFrame();
