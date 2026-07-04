@@ -82,6 +82,7 @@ namespace SKSEMenuFramework {
         using LoadTextureFuction = ImGuiMCP::ImTextureID (*)(const char* texturePath, ImGuiMCP::ImVec2* size);
         using DisposeTextureFuction = void (*)(const char* texturePath);
         using GetMenuFrameworkVersionFunction = float (*)();
+        using SetHotkeyEnabledFunction = void (*)(bool enabled);
 
         class InputEvent {
             uint64_t id;
@@ -171,6 +172,12 @@ namespace SKSEMenuFramework {
             return result;
         }
         return nullptr;
+    }
+    inline void SetHotkeyEnabled(bool enabled) {
+        static auto func = Model::Internal::GetFunction<Model::SetHotkeyEnabledFunction>("SetHotkeyEnabled");
+        if (func) {
+            func(enabled);
+        }
     }
     inline Model::InputEvent* AddInputEvent(Model::InputEventCallback callback) { return new Model::InputEvent(callback); }
     inline Model::HudElement* AddHudElement(Model::HudElementCallback callback) { return new Model::HudElement(callback); }

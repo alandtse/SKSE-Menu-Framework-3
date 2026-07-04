@@ -12,6 +12,7 @@ namespace UI {
         static void install();
         static bool ProcessOpenClose(RE::InputEvent* const* evns);
         static inline std::atomic<bool> initialized{false};
+        static inline std::atomic<bool> hotkeyEnabled{true};
     };
 
 

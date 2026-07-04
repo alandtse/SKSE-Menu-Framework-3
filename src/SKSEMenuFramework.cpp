@@ -101,3 +101,5 @@ void UnregisterEvent(int64_t id) { Event::RemoveEventListener(id); }
 float GetMenuFrameworkVersion() { return MENU_FRAMEWORK_VERSION; }
 
 WindowInterface* GetMainWindow() { return WindowManager::MainInterface; }
+
+void SetHotkeyEnabled(bool enabled) { UI::Renderer::hotkeyEnabled.store(enabled); }

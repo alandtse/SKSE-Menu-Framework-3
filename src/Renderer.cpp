@@ -20,7 +20,7 @@ bool UI::Renderer::ProcessOpenClose(RE::InputEvent* const* evns) {
         const auto temp_device = a_event->GetDevice();
         if (!IsSupportedDevice(temp_device)) continue;
         const auto temp_toggleKey = temp_device == RE::INPUT_DEVICE::kKeyboard ? Config::ToggleKey : Config::ToggleKeyGamePad;
-        if (a_event->GetIDCode() == temp_toggleKey) {
+        if (hotkeyEnabled.load() && a_event->GetIDCode() == temp_toggleKey) {
 
             if (WindowManager::MainInterface->IsOpen.load() && a_event->IsDown()) {
                 WindowManager::Close();
