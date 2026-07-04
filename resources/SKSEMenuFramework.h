@@ -83,6 +83,7 @@ namespace SKSEMenuFramework {
         using DisposeTextureFuction = void (*)(const char* texturePath);
         using GetMenuFrameworkVersionFunction = float (*)();
         using SetHotkeyEnabledFunction = void (*)(bool enabled);
+        using IsHotkeyEnabledFunction = bool (*)();
 
         class InputEvent {
             uint64_t id;
@@ -178,6 +179,10 @@ namespace SKSEMenuFramework {
         if (func) {
             func(enabled);
         }
+    }
+    inline bool IsHotkeyEnabled() {
+        static auto func = Model::Internal::GetFunction<Model::IsHotkeyEnabledFunction>("IsHotkeyEnabled");
+        return func ? func() : false;
     }
     inline Model::InputEvent* AddInputEvent(Model::InputEventCallback callback) { return new Model::InputEvent(callback); }
     inline Model::HudElement* AddHudElement(Model::HudElementCallback callback) { return new Model::HudElement(callback); }

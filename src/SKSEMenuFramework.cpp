@@ -103,3 +103,5 @@ float GetMenuFrameworkVersion() { return MENU_FRAMEWORK_VERSION; }
 WindowInterface* GetMainWindow() { return WindowManager::MainInterface; }
 
 void SetHotkeyEnabled(bool enabled) { UI::Renderer::hotkeyEnabled.store(enabled); }
+
+bool IsHotkeyEnabled() { return UI::Renderer::hotkeyEnabled.load(); }

@@ -30,3 +30,4 @@ FUNCTION_PREFIX void UnregisterEvent(int64_t id);
 FUNCTION_PREFIX float GetMenuFrameworkVersion();
 FUNCTION_PREFIX WindowInterface* GetMainWindow();
 FUNCTION_PREFIX void SetHotkeyEnabled(bool enabled);
+FUNCTION_PREFIX bool IsHotkeyEnabled();
