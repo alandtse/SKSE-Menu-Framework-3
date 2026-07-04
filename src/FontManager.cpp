@@ -120,8 +120,10 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
 
     if (Config::EnableChinese) 
     {
+        font_config.OversampleH = 1;
+        font_config.OversampleV = 1;
         io.Fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
-        io.Fonts->TexDesiredWidth = 8192;
+        io.Fonts->TexDesiredWidth = 16384;
     }
 
     std::vector<std::filesystem::path> fontFiles;
@@ -163,6 +165,10 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
     ImFontConfig merge_config;
     merge_config.MergeMode = true;
     merge_config.PixelSnapH = true;
+    if (Config::EnableChinese) {
+        merge_config.OversampleH = 1;
+        merge_config.OversampleV = 1;
+    }
 
     GetFont(io, "SkyrimMenuFont.ttf", GetFontSize("SkyrimMenuFont.ttf", size), &merge_config,
         io.Fonts->GetGlyphRangesDefault());
@@ -190,6 +196,10 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
                 ImFontConfig namedMergeConfig;
                 namedMergeConfig.MergeMode = true;
                 namedMergeConfig.PixelSnapH = true;
+                if (Config::EnableChinese) {
+                    namedMergeConfig.OversampleH = 1;
+                    namedMergeConfig.OversampleV = 1;
+                }
                 GetFont(io, filename, configuredSize, &namedMergeConfig, icons_ranges);
             }
         } else {
