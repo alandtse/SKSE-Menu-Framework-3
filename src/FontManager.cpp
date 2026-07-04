@@ -2,6 +2,15 @@
 #include "Config.h"
 #include "imgui_internal.h"
 
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <ranges>
+#include <system_error>
+#include <vector>
+
 #define ICON_MIN_FA 0xe005
 #define ICON_MAX_FA 0xf8ff
 
@@ -12,6 +21,68 @@ namespace {
         0x015E, 0x015F, // S with cedilla
         0,
     };
+
+    constexpr auto FONT_DIRECTORY = "Data/SKSE/Plugins/Fonts";
+
+    std::string NormalizeFontName(std::string name) {
+        std::ranges::transform(name, name.begin(), [](unsigned char character) {
+            return static_cast<char>(std::tolower(character));
+        });
+        return name;
+    }
+
+    bool IsSupportedFont(const std::filesystem::path& path) {
+        const auto extension = NormalizeFontName(path.extension().string());
+        return extension == ".ttf" || extension == ".otf";
+    }
+
+    bool IsFontAwesome(const std::string& name) {
+        const auto normalizedName = NormalizeFontName(std::filesystem::path(name).filename().string());
+        return normalizedName == "fa-solid-900.ttf" || normalizedName == "fa-regular-400.ttf" ||
+               normalizedName == "fa-brands-400.ttf";
+    }
+
+    float GetFontSize(const std::filesystem::path& fontPath, float fallback) {
+        auto configPath = std::filesystem::path(FONT_DIRECTORY) / fontPath.filename();
+        configPath.replace_extension(".json");
+        if (!std::filesystem::exists(configPath)) {
+            return fallback;
+        }
+
+        try {
+            std::ifstream stream(configPath);
+            const auto config = nlohmann::json::parse(stream);
+
+            const char* sizeName = nullptr;
+            if (fallback == Config::FontSizeSmall) {
+                sizeName = "small";
+            } else if (fallback == Config::FontSizeMedium) {
+                sizeName = config.contains("default") ? "default" : "medium";
+            } else if (fallback == Config::FontSizeBig) {
+                sizeName = "big";
+            }
+
+            if (sizeName && config.contains(sizeName) && config[sizeName].is_number()) {
+                const auto configuredSize = config[sizeName].get<float>();
+                if (configuredSize > 0.0f) {
+                    return configuredSize;
+                }
+            }
+        } catch (const std::exception& exception) {
+            SKSE::log::warn("FontLoader: Could not read '{}': {}", configPath.string(), exception.what());
+        }
+
+        return fallback;
+    }
+
+    void RegisterFont(FontContainer& container, const std::filesystem::path& path, ImFont* font) {
+        if (!font) {
+            return;
+        }
+
+        container.fonts[NormalizeFontName(path.filename().string())] = font;
+        container.fonts[NormalizeFontName(path.stem().string())] = font;
+    }
 }
 
 FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
@@ -53,14 +124,39 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
         io.Fonts->TexDesiredWidth = 8192;
     }
 
-    // Retrieve a pointer to the absolutely safe glyph range for the corresponding font size from the map.
-    result.defaultFont =
-        GetFont(io, Config::PrimaryFont.c_str(), size, &font_config, persistentGlyphRanges.at(size).Data);
+    std::vector<std::filesystem::path> fontFiles;
+    std::error_code error;
+    for (std::filesystem::directory_iterator iterator(FONT_DIRECTORY, error), end; !error && iterator != end;
+         iterator.increment(error)) {
+        if (iterator->is_regular_file(error) && IsSupportedFont(iterator->path())) {
+            fontFiles.push_back(iterator->path());
+        }
+    }
+    std::ranges::sort(fontFiles);
+
+    if (error) {
+        SKSE::log::error("FontLoader: Could not enumerate '{}': {}", FONT_DIRECTORY, error.message());
+    }
+
+    const auto primaryName = NormalizeFontName(Config::PrimaryFont);
+    std::string baseFontName;
+    auto primary = std::ranges::find_if(fontFiles, [&](const auto& path) {
+        return NormalizeFontName(path.filename().string()) == primaryName;
+    });
+    if (primary != fontFiles.end()) {
+        baseFontName = primary->filename().string();
+        result.defaultFont = GetFont(io, baseFontName, GetFontSize(*primary, size), &font_config,
+            persistentGlyphRanges.at(size).Data);
+        RegisterFont(result, *primary, result.defaultFont);
+    }
 
     // rollback mechanism
     if (!result.defaultFont) {
         SKSE::log::warn("Primary font '{}' failed to load. Falling back to SkyrimMenuFont.ttf.", Config::PrimaryFont);
-        result.defaultFont = GetFont(io, "SkyrimMenuFont.ttf", size, nullptr, io.Fonts->GetGlyphRangesDefault());
+        baseFontName = "SkyrimMenuFont.ttf";
+        result.defaultFont = GetFont(io, "SkyrimMenuFont.ttf", GetFontSize("SkyrimMenuFont.ttf", size), nullptr,
+            io.Fonts->GetGlyphRangesDefault());
+        RegisterFont(result, "SkyrimMenuFont.ttf", result.defaultFont);
     }
 
     // Merge default font and Font Awesome icon
@@ -68,12 +164,42 @@ FontContainer FontManager::LoadFonts(ImGuiIO& io, float size) {
     merge_config.MergeMode = true;
     merge_config.PixelSnapH = true;
 
-    GetFont(io, "SkyrimMenuFont.ttf", size, &merge_config, io.Fonts->GetGlyphRangesDefault());
+    GetFont(io, "SkyrimMenuFont.ttf", GetFontSize("SkyrimMenuFont.ttf", size), &merge_config,
+        io.Fonts->GetGlyphRangesDefault());
 
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
-    GetFont(io, "fa-solid-900.ttf", size, &merge_config, icons_ranges);
-    GetFont(io, "fa-regular-400.ttf", size, &merge_config, icons_ranges);
-    GetFont(io, "fa-brands-400.ttf", size, &merge_config, icons_ranges);
+    GetFont(io, "fa-solid-900.ttf", GetFontSize("fa-solid-900.ttf", size), &merge_config, icons_ranges);
+    GetFont(io, "fa-regular-400.ttf", GetFontSize("fa-regular-400.ttf", size), &merge_config, icons_ranges);
+    GetFont(io, "fa-brands-400.ttf", GetFontSize("fa-brands-400.ttf", size), &merge_config, icons_ranges);
+
+    // Every font is also loaded as an independently selectable face. Both its
+    // filename ("Example.ttf") and stem ("Example") are accepted by the API.
+    for (const auto& path : fontFiles) {
+        const auto filename = path.filename().string();
+        if (result.fonts.contains(NormalizeFontName(filename))) {
+            continue;
+        }
+
+        ImFont* font = nullptr;
+        if (IsFontAwesome(filename)) {
+            // Icon fonts do not contain ordinary text. Start a new composite
+            // face with the primary text font, then merge only this icon style.
+            const auto configuredSize = GetFontSize(path, size);
+            font = GetFont(io, baseFontName, configuredSize, &font_config, persistentGlyphRanges.at(size).Data);
+            if (font) {
+                ImFontConfig namedMergeConfig;
+                namedMergeConfig.MergeMode = true;
+                namedMergeConfig.PixelSnapH = true;
+                GetFont(io, filename, configuredSize, &namedMergeConfig, icons_ranges);
+            }
+        } else {
+            font = GetFont(io, filename, GetFontSize(path, size), &font_config, persistentGlyphRanges.at(size).Data);
+        }
+        RegisterFont(result, path, font);
+        if (!font) {
+            SKSE::log::warn("FontLoader: '{}' failed to load at size {}.", filename, size);
+        }
+    }
 
     SKSE::log::info("Font loading process for size {} completed.", size);
     return result;
@@ -87,10 +213,16 @@ void FontManager::CleanFontStack() {
 void FontManager::CleanFont() {
     CleanFontStack();
     currentFont = Font::fontSizeDefault;
+    currentFontName.clear();
 }
 
 void FontManager::SetFont(Font font) {
     currentFont = font;
+    ProcessFont();
+}
+
+void FontManager::SetFont(const std::string& name) {
+    currentFontName = NormalizeFontName(std::filesystem::path(name).filename().string());
     ProcessFont();
 }
 
@@ -103,18 +235,21 @@ void FontManager::ProcessFont() {
     } else if (currentFont & Font::fontSizeDefault) {
         container = fontSizes["Default"];
     }
-    if (currentFont & Font::faSolid) {
-        if (container.faSolid) {
-            ImGui::PushFont(container.faSolid);
+    if (currentFontName.empty()) {
+        if (container.defaultFont) {
+            ImGui::PushFont(container.defaultFont);
         }
-    } else if (currentFont & Font::faRegular) {
-        if (container.faRegular) {
-            ImGui::PushFont(container.faRegular);
-        }
-    } else if (currentFont & Font::faBrands) {
-        if (container.faBrands) {
-            ImGui::PushFont(container.faBrands);
-        }
+        return;
+    }
+
+    auto font = container.fonts.find(currentFontName);
+    if (font == container.fonts.end()) {
+        font = container.fonts.find(NormalizeFontName(std::filesystem::path(currentFontName).stem().string()));
+    }
+    if (font != container.fonts.end() && font->second) {
+        ImGui::PushFont(font->second);
+    } else {
+        SKSE::log::warn("Font '{}' is not loaded for the selected size.", currentFontName);
     }
 }
 

@@ -50,26 +50,24 @@ void PushSmall()
 
 void PushSolid() 
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faBrands);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faRegular);
-    FontManager::currentFont = (Font)(FontManager::currentFont | Font::faSolid);
-    FontManager::ProcessFont();
+    PushFont("fa-solid-900.ttf");
 }
 
 void PushRegular() 
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faSolid);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faBrands);
-    FontManager::currentFont = (Font)(FontManager::currentFont | Font::faRegular);
-    FontManager::ProcessFont();
+    PushFont("fa-regular-400.ttf");
 }
 
 void PushBrands() 
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faSolid);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::faRegular);
-    FontManager::currentFont = (Font)(FontManager::currentFont | Font::faBrands);
-    FontManager::ProcessFont();
+    PushFont("fa-brands-400.ttf");
+}
+
+void PushFont(const char* name)
+{
+    if (name) {
+        FontManager::SetFont(name);
+    }
 }
 
 void Pop() { FontManager::CleanFont(); }

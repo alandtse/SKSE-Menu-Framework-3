@@ -66,6 +66,7 @@ namespace SKSEMenuFramework {
         using UnregisterEventFuction = void (*)(int64_t id);
 
         using ActionFunction = void (*)();
+        using PushFontFunction = void (*)(const char* name);
         using AddWindowFunction = Model::WindowInterface* (*)(RenderFunction);
         using AddWindowWithViewFunction = Model::WindowInterface* (*)(RenderFunction, const char*);
         using GetMainWindowFunction = Model::WindowInterface* (*)();
@@ -212,6 +213,13 @@ namespace SKSEMenuFramework {
             return func(texturePath.c_str());
         }
         return;
+    }
+
+    inline void PushFont(std::string name) {
+        static auto func = Model::Internal::GetFunction<Model::PushFontFunction>("PushFont");
+        if (func) {
+            func(name.c_str());
+        }
     }
 
     inline void SetSection(std::string key) { Model::Internal::key = key; }

@@ -90,6 +90,24 @@ Here is what this example will look like:
 You can browse icons and get the Unicode IDs from the [Font Awesome](https://fontawesome.com/search?o=r&m=free) website
 ![image](https://github.com/Thiago099/SKSE-Menu-Framework-SDK/assets/66787043/ec5f14f1-5658-4f6e-8e60-2342f47f078e)
 
+All `.ttf` and `.otf` files in `Data/SKSE/Plugins/Fonts` are loaded at the small, default, and big configured sizes. Select one by filename or by its filename without the extension:
+
+```cpp
+SKSEMenuFramework::PushFont("SkyrimMenuFont.ttf"); // "SkyrimMenuFont" also works
+ImGui::Text("This text uses the selected font.");
+FontAwesome::Pop();
+```
+
+To override those three sizes for one font, place a JSON file with the same base name beside it. For example, `MyFont.json` configures `MyFont.ttf`:
+
+```json
+{
+  "small": 16.0,
+  "default": 32.0,
+  "big": 64.0
+}
+```
+
 
 
 ## Creating your own windows
