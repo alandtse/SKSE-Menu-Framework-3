@@ -353,7 +353,9 @@ void UI::RenderConfigWindow() {
         }
 
         static float pendingFontSize = Config::FontSizeMedium;
-        ImGui::Text(Translations::Get("Settings.FontSize"));
+        const auto fontSizeLabel = std::format("{} ({:g}-{:g}):", Translations::Get("Settings.FontSize"),
+            Config::MinFontSize, Config::MaxFontSize);
+        ImGui::TextUnformatted(fontSizeLabel.c_str());
         ImGui::InputFloat("##FontSize", &pendingFontSize, 1.0f, 4.0f, "%.1f");
         if (pendingFontSize != Config::FontSizeMedium) {
             if (ImGui::Button(Translations::Get("Settings.FontSize.Apply"))) {

@@ -3,8 +3,8 @@
 
 class Config {
     public:
-    static constexpr float MinFontSize = 12.0f;
-    static constexpr float MaxFontSize = 64.0f;
+    static float MinFontSize;
+    static float MaxFontSize;
 
     static void Init();
     static void Save();

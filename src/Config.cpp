@@ -20,6 +20,8 @@ bool Config::EnableCyrillic = false;
 bool Config::EnableThai = false;
 bool Config::EnableTurkish = false;
 float Config::FontSizeMedium = 32.0f;
+float Config::MinFontSize = 12.0f;
+float Config::MaxFontSize = 64.0f;
 
 
 void Config::Init() {
@@ -47,6 +49,17 @@ void Config::Init() {
     EnableCyrillic = ini->GetBool("EnableCyrillic", false);
     EnableThai = ini->GetBool("EnableThai", false);
     EnableTurkish = ini->GetBool("EnableTurkish", false);
+    MinFontSize = ini->GetFloat("MinFontSize", 12.0f);
+    MaxFontSize = ini->GetFloat("MaxFontSize", 64.0f);
+    if (!std::isfinite(MinFontSize)) {
+        MinFontSize = 12.0f;
+    }
+    if (!std::isfinite(MaxFontSize)) {
+        MaxFontSize = 64.0f;
+    }
+    if (MinFontSize > MaxFontSize) {
+        std::swap(MinFontSize, MaxFontSize);
+    }
     FontSizeMedium = NormalizeFontSize(ini->GetFloat("FontSizeMedium", 32.0f));
 
 
@@ -109,6 +122,8 @@ void Config::Save() {
     ini->SetBool("EnableThai", EnableThai);
     ini->SetBool("EnableTurkish", EnableTurkish);
 
+    ini->SetFloat("MinFontSize", MinFontSize);
+    ini->SetFloat("MaxFontSize", MaxFontSize);
     ini->SetFloat("FontSizeMedium", FontSizeMedium);
 
     // Save to file
