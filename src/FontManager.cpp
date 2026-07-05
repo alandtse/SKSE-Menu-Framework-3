@@ -53,7 +53,7 @@ namespace {
             std::ifstream stream(configPath);
             const auto config = nlohmann::json::parse(stream);
 
-            const char* sizeName = config.contains("default") ? "default" : "medium";
+            const char* sizeName = "fontSize";
 
             if (sizeName && config.contains(sizeName) && config[sizeName].is_number()) {
                 const auto configuredSize = config[sizeName].get<float>();
@@ -217,6 +217,14 @@ void FontManager::CleanFont() {
     CleanFontStack();
     currentFont = Font::fontSizeDefault;
     currentFontName.clear();
+}
+
+void FontManager::RequestAtlasRebuild() {
+    atlasRebuildRequested.store(true);
+}
+
+bool FontManager::ConsumeAtlasRebuildRequest() {
+    return atlasRebuildRequested.exchange(false);
 }
 
 void FontManager::SetFont(Font font) {

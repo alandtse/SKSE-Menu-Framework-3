@@ -260,6 +260,23 @@ void Render() {
     g_vrHelper.RenderFrame();
     FontManager::CleanFont();
 
+    if (FontManager::ConsumeAtlasRebuildRequest()) {
+        auto& io = ImGui::GetIO();
+        ImGui_ImplDX11_InvalidateDeviceObjects();
+        io.Fonts->Clear();
+        FontManager::fontSizes.clear();
+
+        auto regular = FontManager::LoadFonts(io, Config::FontSizeMedium);
+        io.FontDefault = regular.defaultFont;
+        FontManager::fontSizes["Default"] = std::move(regular);
+
+        if (!io.Fonts->Build()) {
+            logger::error("Failed to rebuild the font atlas for font size {}.", Config::FontSizeMedium);
+        } else if (!ImGui_ImplDX11_CreateDeviceObjects()) {
+            logger::error("Failed to recreate ImGui device objects after rebuilding the font atlas.");
+        }
+    }
+
     Event::DispatchEvent(Event::EventType::kAfterRender);
 }
 

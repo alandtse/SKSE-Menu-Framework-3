@@ -9,6 +9,8 @@
   "Settings.ResetWindows": "Reset Windows",
   "Settings.FreezeTime": "Freeze Time",
   "Settings.BlurBackground": "Blur Background",
+  "Settings.FontSize": "Font Size (12-48):",
+  "Settings.FontSize.Apply": "Apply Font Size",
   "Settings.ToggleMode.Keyboard": "Toggle Mode (Keyboard):",
   "Settings.ToggleKey.Keyboard": "Toggle Key (Keyboard):",
   "Settings.ToggleMode.Gamepad": "Toggle Mode (Gamepad):",

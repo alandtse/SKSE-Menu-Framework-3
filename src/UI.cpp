@@ -5,6 +5,7 @@
 #include "Application.h"
 #include "SKSEMenuFramework.h"
 #include "Translations.h"
+#include "FontManager.h"
 static ImGuiTextFilter filter;
 
 UI::MenuTree* UI::RootMenu = new UI::MenuTree();
@@ -349,6 +350,18 @@ void UI::RenderConfigWindow() {
 
         if (ToggleButton(Translations::Get("Settings.BlurBackground"), &Config::BlurBackgroundOnMenu)) {
             Config::Save();
+        }
+
+        static float pendingFontSize = Config::FontSizeMedium;
+        ImGui::Text(Translations::Get("Settings.FontSize"));
+        ImGui::InputFloat("##FontSize", &pendingFontSize, 1.0f, 4.0f, "%.1f");
+        if (pendingFontSize != Config::FontSizeMedium) {
+            if (ImGui::Button(Translations::Get("Settings.FontSize.Apply"))) {
+                Config::FontSizeMedium = Config::NormalizeFontSize(pendingFontSize);
+                pendingFontSize = Config::FontSizeMedium;
+                Config::Save();
+                FontManager::RequestAtlasRebuild();
+            }
         }
 
         const char* togleModeNames[] = {"SINGLEPRESS", "HOLD", "DOUBLEPRESS", "OFF"};

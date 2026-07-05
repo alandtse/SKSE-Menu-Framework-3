@@ -3,6 +3,9 @@
 
 class Config {
     public:
+    static constexpr float MinFontSize = 12.0f;
+    static constexpr float MaxFontSize = 48.0f;
+
     static void Init();
     static void Save();
     static unsigned int ToggleKey;
@@ -21,5 +24,6 @@ class Config {
     static bool EnableThai;
     static bool EnableTurkish;
     static float FontSizeMedium;
+    static float NormalizeFontSize(float size);
     static void LoadStyle();
 };

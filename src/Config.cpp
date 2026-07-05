@@ -2,6 +2,8 @@
 #include "Application.h"
 #include "Theme.h"
 #include "Utils.h"
+#include <algorithm>
+#include <cmath>
 unsigned int Config::ToggleKey = 0x3B;
 uint8_t Config::ToggleMode = 0;
 unsigned int Config::ToggleKeyGamePad = 0;
@@ -45,7 +47,7 @@ void Config::Init() {
     EnableCyrillic = ini->GetBool("EnableCyrillic", false);
     EnableThai = ini->GetBool("EnableThai", false);
     EnableTurkish = ini->GetBool("EnableTurkish", false);
-    FontSizeMedium = ini->GetFloat("FontSizeMedium", 32.0f);
+    FontSizeMedium = NormalizeFontSize(ini->GetFloat("FontSizeMedium", 32.0f));
 
 
 
@@ -122,4 +124,11 @@ void Config::LoadStyle() {
     
     Theme::LoadJsonStyle(MenuStyles[MenuStyle]);
 
+}
+
+float Config::NormalizeFontSize(float size) {
+    if (!std::isfinite(size)) {
+        return 32.0f;
+    }
+    return std::clamp(size, MinFontSize, MaxFontSize);
 }
