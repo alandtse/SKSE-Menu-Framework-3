@@ -7,9 +7,7 @@ enum Font {
     faSolid = 1 << 0,
     faRegular = 1 << 1,
     faBrands = 1 << 2,
-    fontSizeSmall = 1 << 3,
     fontSizeDefault = 1 << 4,
-    fontSizeBig = 1 << 5,
 };
 
 struct FontContainer {

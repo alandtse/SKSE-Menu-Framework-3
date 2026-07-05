@@ -17,9 +17,7 @@ bool Config::EnableKorean = false;
 bool Config::EnableCyrillic = false;
 bool Config::EnableThai = false;
 bool Config::EnableTurkish = false;
-float Config::FontSizeSmall = 16.0f;
 float Config::FontSizeMedium = 32.0f;
-float Config::FontSizeBig = 64.0f;
 
 
 void Config::Init() {
@@ -47,9 +45,7 @@ void Config::Init() {
     EnableCyrillic = ini->GetBool("EnableCyrillic", false);
     EnableThai = ini->GetBool("EnableThai", false);
     EnableTurkish = ini->GetBool("EnableTurkish", false);
-    FontSizeSmall = ini->GetFloat("FontSizeSmall", 16.0f);
     FontSizeMedium = ini->GetFloat("FontSizeMedium", 32.0f);
-    FontSizeBig = ini->GetFloat("FontSizeBig", 64.0f);
 
 
 
@@ -111,9 +107,7 @@ void Config::Save() {
     ini->SetBool("EnableThai", EnableThai);
     ini->SetBool("EnableTurkish", EnableTurkish);
 
-    ini->SetFloat("FontSizeSmall", FontSizeSmall);
     ini->SetFloat("FontSizeMedium", FontSizeMedium);
-    ini->SetFloat("FontSizeBig", FontSizeBig);
 
     // Save to file
     if (!ini->Save()) {

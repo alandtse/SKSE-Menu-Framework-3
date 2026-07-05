@@ -20,8 +20,6 @@ class Config {
     static bool EnableCyrillic;
     static bool EnableThai;
     static bool EnableTurkish;
-    static float FontSizeSmall;
     static float FontSizeMedium;
-    static float FontSizeBig;
     static void LoadStyle();
 };

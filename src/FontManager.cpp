@@ -53,14 +53,7 @@ namespace {
             std::ifstream stream(configPath);
             const auto config = nlohmann::json::parse(stream);
 
-            const char* sizeName = nullptr;
-            if (fallback == Config::FontSizeSmall) {
-                sizeName = "small";
-            } else if (fallback == Config::FontSizeMedium) {
-                sizeName = config.contains("default") ? "default" : "medium";
-            } else if (fallback == Config::FontSizeBig) {
-                sizeName = "big";
-            }
+            const char* sizeName = config.contains("default") ? "default" : "medium";
 
             if (sizeName && config.contains(sizeName) && config[sizeName].is_number()) {
                 const auto configuredSize = config[sizeName].get<float>();
@@ -237,14 +230,7 @@ void FontManager::SetFont(const std::string& name) {
 }
 
 void FontManager::ProcessFont() {
-    FontContainer container;
-    if (currentFont & Font::fontSizeSmall) {
-        container = fontSizes["Small"];
-    } else if (currentFont & Font::fontSizeBig) {
-        container = fontSizes["Big"];
-    } else if (currentFont & Font::fontSizeDefault) {
-        container = fontSizes["Default"];
-    }
+    auto& container = fontSizes["Default"];
     if (currentFontName.empty()) {
         if (container.defaultFont) {
             ImGui::PushFont(container.defaultFont);

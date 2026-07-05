@@ -199,8 +199,6 @@ void Hooks::D3DInitHook::thunk() {
     auto regular = FontManager::LoadFonts(io, Config::FontSizeMedium);
     io.FontDefault = regular.defaultFont;
 
-    FontManager::fontSizes["Big"] = FontManager::LoadFonts(io, Config::FontSizeBig);
-    FontManager::fontSizes["Small"] = FontManager::LoadFonts(io, Config::FontSizeSmall);
     FontManager::fontSizes["Default"] = regular;
 
     io.Fonts->Build();

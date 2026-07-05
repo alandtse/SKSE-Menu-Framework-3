@@ -28,24 +28,14 @@ WindowInterface* AddWindow(RenderFunction rendererFunction) {
 
 void PushDefault() 
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeBig);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeSmall);
     FontManager::currentFont = (Font)(FontManager::currentFont | Font::fontSizeDefault);
     FontManager::ProcessFont();
 }
-void PushBig() 
+void PushBig()
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeDefault);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeSmall);
-    FontManager::currentFont = (Font)(FontManager::currentFont | Font::fontSizeBig);
-    FontManager::ProcessFont();
 }
-void PushSmall() 
+void PushSmall()
 {
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeDefault);
-    FontManager::currentFont = (Font)(FontManager::currentFont & ~Font::fontSizeBig);
-    FontManager::currentFont = (Font)(FontManager::currentFont | Font::fontSizeSmall);
-    FontManager::ProcessFont();
 }
 
 void PushSolid() 
