@@ -4,7 +4,7 @@
 class Config {
     public:
     static constexpr float MinFontSize = 12.0f;
-    static constexpr float MaxFontSize = 48.0f;
+    static constexpr float MaxFontSize = 64.0f;
 
     static void Init();
     static void Save();
