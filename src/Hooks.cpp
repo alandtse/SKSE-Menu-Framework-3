@@ -117,11 +117,9 @@ void Hooks::ProcessInputQueueHook::thunk(RE::BSTEventSource<RE::InputEvent*>* a_
         originalFunction(a_dispatcher, dummy);
     } else {
         if (WindowManager::ShouldTheGameBePaused()) {
-            EnableImGuiInput();
             UI::TranslateInputEvent(a_event);
             originalFunction(a_dispatcher, RemoveNonPrintScreenInputs(const_cast<RE::InputEvent**>(a_event)));
         } else {
-            DisableImGuiInput();
             originalFunction(a_dispatcher, a_event);
         }
     }
@@ -221,6 +219,18 @@ void Render() {
         g_vrHelper.Update(menuOpen);
         if (menuOpen != WindowManager::IsAnyWindowOpen())
             menuOpen ? WindowManager::Open() : WindowManager::Close();
+        g_vrHelper.PumpKeyboard();
+    }
+
+    // Decided once per frame, after the VR reconciliation above (which can
+    // flip menu-open this same frame), not per RE::InputEvent: the VR wand is
+    // pumped straight into ImGui's IO above, bypassing RE::InputEvent
+    // entirely, so a wand-only session needs this cleared without a native
+    // keyboard/mouse event ever firing.
+    if (WindowManager::ShouldTheGameBePaused()) {
+        EnableImGuiInput();
+    } else {
+        DisableImGuiInput();
     }
 
     ImGui_ImplDX11_NewFrame();
