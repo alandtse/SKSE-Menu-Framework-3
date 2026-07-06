@@ -261,6 +261,7 @@ void Render() {
         io.MouseDrawCursor = false;
         GameLock::SetState(GameLock::State::Unlocked);
     }
+    FontManager::CleanFont();
     ImGui::EndFrame();
     ImGui::Render();
     // One output call: VR + helper → flat panel only (the helper composites it
@@ -268,7 +269,6 @@ void Render() {
     // RenderFrame hides that branch, so we never paint a second copy into the
     // game's kHUDMENU (which Skyrim VR would wrap onto its curved HUD).
     g_vrHelper.RenderFrame();
-    FontManager::CleanFont();
 
     if (FontManager::ConsumeAtlasRebuildRequest()) {
         auto& io = ImGui::GetIO();
