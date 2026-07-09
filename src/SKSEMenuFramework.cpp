@@ -40,17 +40,16 @@ void PushSmall()
 
 void PushSolid() 
 {
-    PushFont("fa-solid-900.ttf");
 }
 
 void PushRegular() 
 {
-    PushFont("fa-regular-400.ttf");
+
 }
 
 void PushBrands() 
 {
-    PushFont("fa-brands-400.ttf");
+
 }
 
 void PushFont(const char* name)
